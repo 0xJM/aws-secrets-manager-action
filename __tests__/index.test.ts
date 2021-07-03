@@ -10,11 +10,7 @@ jest.mock('aws-sdk')
 config({ path: resolve(__dirname, "../.env") })
 
 // In case we want to make actual AWS calls during integration tests instead of jest mock calls
-const AWSConfig = {
-  accessKeyId: process.env[getPOSIXString(Inputs.AWS_ACCESS_KEY_ID)],
-  secretAccessKey: process.env[getPOSIXString(Inputs.AWS_SECRET_ACCESS_KEY)],
-  region: process.env[getPOSIXString(Inputs.AWS_REGION)]
-}
+const AWSConfig = {}
 
 const secretsManagerClient = new SecretsManager(AWSConfig)
 
@@ -59,21 +55,21 @@ test('Get Secret Value Map: parse=false, plain-text value', () => {
 test('Get Secret Value Map: parse=true, JSON string value', () => {
   expect.assertions(1)
   return getSecretValueMap(secretsManagerClient, 'my_secret_2', true).then(secretValueMap => {
-    expect(secretValueMap).toMatchObject({ 'my_secret_2.foo': 'bar' })
+    expect(secretValueMap).toMatchObject({ 'foo': 'bar', 'mock': 'true' })
   })
 })
 
 test('Get Secret Value Map: parse=false, JSON string value', () => {
   expect.assertions(1)
   return getSecretValueMap(secretsManagerClient, 'my_secret_2', false).then(secretValueMap => {
-    expect(secretValueMap).toMatchObject({ 'my_secret_2': '{"foo" : "bar"}' })
+    expect(secretValueMap).toMatchObject({ 'my_secret_2': '{"foo" : "bar", "mock" : "true"}' })
   })
 })
 
 test('Get Secret Value Map: parse=true, Base64 encoded JSON string value', () => {
   expect.assertions(1)
   return getSecretValueMap(secretsManagerClient, 'my/secret/3', true).then(secretValueMap => {
-    expect(secretValueMap).toMatchObject({ 'my/secret/3.foo': 'bar' })
+    expect(secretValueMap).toMatchObject({ 'foo': 'bar' })
   })
 })
 

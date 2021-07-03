@@ -8,16 +8,6 @@ const inputSecretNames: string[] = [...new Set(core.getInput(Inputs.SECRETS).spl
 // Check if any secret name contains a wildcard '*'
 const hasWildcard: boolean = inputSecretNames.some(secretName => secretName.includes('*'))
 const shouldParseJSON = (core.getInput(Inputs.PARSE_JSON).trim().toLowerCase() === 'true')
-const AWSConfig = {
-  accessKeyId: core.getInput(Inputs.AWS_ACCESS_KEY_ID),
-  secretAccessKey: core.getInput(Inputs.AWS_SECRET_ACCESS_KEY),
-  region: core.getInput(Inputs.AWS_REGION)
-}
-
-const awsSessionToken = core.getInput(Inputs.AWS_SESSION_TOKEN)
-if (awsSessionToken) {
-  AWSConfig['sessionToken'] = awsSessionToken
-}
 
 const getSecretsManagerClient = (config): SecretsManager => new SecretsManager(config)
 const getSecretValue = (secretsManagerClient: SecretsManager, secretName: string) =>
@@ -71,12 +61,10 @@ const getSecretValueMap = (secretsManagerClient: SecretsManager, secretName: str
 
         // If secretName = 'mySecret' and secretValue='{ "foo": "bar" }'
         // and if secretValue is a valid JSON object string and shouldParseJSON = true,
-        // injected secrets will be of the form 'mySecret.foo' = 'bar'
+        // injected secrets will be of the form 'foo' = 'bar'
         if (isJSONObjectString(secretValue) && shouldParseJSON) {
           const secretJSON = JSON.parse(secretValue)
-          const secretJSONWrapped = {}
-          secretJSONWrapped[secretName] = secretJSON
-          const secretJSONFlattened = flattenJSONObject(secretJSONWrapped)
+          const secretJSONFlattened = flattenJSONObject(secretJSON)
           secretValueMap = secretJSONFlattened
         }
         // Else, injected secrets will be of the form 'mySecret' = '{ "foo": "bar" }' (raw secret value string)
@@ -155,7 +143,7 @@ upper case letters, digits and underscores. It cannot begin with a digit.')
   }
 }
 
-const secretsManagerClient = getSecretsManagerClient(AWSConfig)
+const secretsManagerClient = getSecretsManagerClient({})
 if (hasWildcard) {
   getSecretNamesToFetch(secretsManagerClient, inputSecretNames)
     .then(secretNamesToFetch => {

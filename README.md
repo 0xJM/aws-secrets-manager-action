@@ -11,17 +11,20 @@ If your secret name contains any characters other than upper case letters, digit
 For example:
 - If your secret name is `dev.foo`, the injected environment variable name will be `DEV_FOO`.
 - If your secret name is `1/dev/foo`, the injected environment variable name will be `_1_DEV_FOO`.
-- If your secret name is `dev/foo`, value is `{ "bar": "baz" }` and `parse-json` is set to `true`, the injected environment variable name will be `DEV_FOO_BAR` (and value will be `baz`).
+- If your secret name is `dev/foo`, value is `{ "bar": "baz" }` and `parse-json` is set to `true`, the injected environment variable name will be `BAR` (and value will be `baz`).
 
 ## Usage
 ```yaml
 steps:
-- name: Read secrets from AWS Secrets Manager into environment variables
-  uses: abhilash1in/aws-secrets-manager-action@v1.0.1
+- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v1.0.2
   with:
     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     aws-region: ${{ secrets.AWS_REGION }}
+- name: Read secrets from AWS Secrets Manager into environment variables
+  uses: 0xJM/aws-secrets-manager-action@v1.0.0
+  with:
     secrets: |
       my_secret_1
       app1/dev/*
@@ -30,18 +33,6 @@ steps:
 - name: Check if env variable is set after fetching secrets
   run: if [ -z ${MY_SECRET_1+x} ]; then echo "MY_SECRET_1 is unset"; else echo "MY_SECRET_1 is set to '$MY_SECRET_1'"; fi
 ```
-- `aws-access-key-id`
-  - Access Key ID of an IAM user with the required [AWS Secrets Manager permissions](#iam-policy).
-  - Empty string can be used ONLY IF you are using a self-hosted GitHub Actions Runner on AWS EC2 instances with an IAM instance profile attached (should have the required [AWS Secrets Manager permissions](#iam-policy)).
-- `aws-secret-access-key`
-  - Corresponding Secret Access Key of the IAM user.
-  - Empty string can be used ONLY IF you are using a self-hosted GitHub Actions Runner on AWS EC2 instances with an IAM instance profile attached (should have the required [AWS Secrets Manager permissions](#iam-policy)).
-- `aws-session-token`
-  - Corresponding Session Token for the IAM user's current session.
-  - Optional (required ONLY IF you are using [AWS IAM temporary credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html)).
-- `aws-region`
-  - AWS region code which has your AWS Secrets Manager secrets.
-  - Example: `us-east-1`.
 - `secrets`: 
   - List of secret names to be retrieved.
   - Examples:
@@ -64,7 +55,7 @@ steps:
 
 | `parse-json` | AWS Secrets Manager Secret<br>(`name` = `value`) | Injected Environment Variable<br>(`name` = `value`) | Explanation                                                                             |
 |--------------|--------------------------------------------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `true`       | `foo` = `{ "bar": "baz" }`                       | `FOO_BAR` = `baz`                                   | Values that can be parsed into a JSON will be parsed and flattened                      |
+| `true`       | `foo` = `{ "bar": "baz" }`                       | `BAR` = `baz`                                       | Values that can be parsed into a JSON will be parsed and flattened                      |
 | `true`       | `1/dev/foo` = `{ "bar" = "baz" }`                | `_1_DEV_FOO` = `{ "bar" = "baz" }`                  | Values that cannot be parsed into a JSON will NOT be parsed                             |
 | `true`       | `foo` = `{ "bar": "baz" }`<br>`ham` = `eggs`     | `FOO_BAR` = `baz` AND<br>`ham` = `eggs`             | If multiple secrets, values that can be parsed into a JSON will be parsed and flattened |
 | `false`      | `dev_foo` = `{ "bar": "baz" }`                   | `DEV_FOO` = `{ "bar": "baz" }`                      | Not parsed                                                                              |
