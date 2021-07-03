@@ -17,13 +17,13 @@ For example:
 ```yaml
 steps:
 - name: Configure AWS credentials
-  uses: aws-actions/configure-aws-credentials@v1.0.2
+  uses: aws-actions/configure-aws-credentials@v1
   with:
     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     aws-region: ${{ secrets.AWS_REGION }}
 - name: Read secrets from AWS Secrets Manager into environment variables
-  uses: 0xJM/aws-secrets-manager-action@v1.0.0
+  uses: 0xJM/aws-secrets-manager-action@v1.0.2
   with:
     secrets: |
       my_secret_1
